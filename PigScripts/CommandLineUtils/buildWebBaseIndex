@@ -155,7 +155,7 @@ CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
 TMP_INDEX_PATH=${ROOT_DEST_NAME}_index.idx_tmp
 
 pigrun -x $EXEC_MODE \
-        URL_MAP_DEST=${DEST_DIR}/${CRAWL_NAME}_urlMap.idx \
+        URL_MAP_DEST=${ROOT_DEST_NAME}_urlMap.idx \
         INDEX_DEST=${ROOT_DEST_NAME}_index.idx \
         TMP_INDEX_DEST=$TMP_INDEX_PATH \
         CRAWL_SOURCE=$CRAWL_SOURCE \

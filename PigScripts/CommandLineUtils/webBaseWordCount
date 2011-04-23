@@ -100,14 +100,43 @@ then
   export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
 fi
 
+# Construct a path name root for the index.
+# Like this: <destDir>/<crawlName>_numPages_startSite_endSite,
+# where defaults are made to be: allPages, firstSite, lastSite
+
+if [ -z $NUM_PAGES ]
+then
+    TMP_NUM_PAGES=allPages
+else
+    TMP_NUM_PAGES=$NUM_PAGES
+fi
+
+if [ -z $START_SITE ]
+then
+    TMP_START_SITE=firstSite
+else
+    TMP_START_SITE=$START_SITE
+fi
+    
+if [ -z $END_SITE ]
+then
+    TMP_END_SITE=lastSite
+else
+    TMP_END_SITE=$END_SITE
+fi
+    
+ROOT_DEST_NAME=${DEST_DIR}/${CRAWL_NAME}_${TMP_NUM_PAGES}_${TMP_START_SITE}_${TMP_END_SITE}
+
+
+
 # Check whether the word count target file exists.
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${ROOT_DEST_NAME}_wordCount.cnt 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt already exists. Quitting."
+    echo "File ${ROOT_DEST_NAME}_wordCount.cnt already exists. Quitting."
     exit -1
 fi
 
@@ -120,7 +149,7 @@ fi
 CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
 
 pigrun -x $EXEC_MODE \
-        WORD_COUNT_DEST=${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt \
+        WORD_COUNT_DEST=${ROOT_DEST_NAME}_wordCount.cnt \
         CRAWL_SOURCE=$CRAWL_SOURCE \
         ${SCRIPT_DIR}/webBaseWordCount.pig
 

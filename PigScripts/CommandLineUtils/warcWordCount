@@ -13,9 +13,6 @@ USAGE="Usage: warcWordCoun [{-h | --help}] \n
 PROGVERSION=1.0
 EXEC_MODE=mapreduce
 DEST_DIR=`pwd`
-NUM_PAGES=""
-START_SITE=""
-END_SITE=""
 
 SHORTOPTS="hvx:d:"
 LONGOPTS="help,version,execmode:,destdir:"
@@ -43,18 +40,6 @@ while true; do
          shift
          DEST_DIR=$1
          ;;
-      -n|--numpages)
-         shift
-         NUM_PAGES=$1
-         ;;
-      -s|--startsite)
-         shift
-         START_SITE=$1
-         ;;
-      -e|--endsite)
-         shift
-         END_SITE=$1
-         ;;
       --)
          shift
          break
@@ -69,13 +54,6 @@ while true; do
    # forgets to put in any required args.
    shift
 done
-
-# echo "execMode : '$EXEC_MODE'"
-# echo "destDir  : '$DEST_DIR'"
-# echo "numPages : '$NUM_PAGES'"
-# echo "startSite: '$START_SITE'"
-# echo "endSite  : '$END_SITE'"
-# echo "crawl: '$1'"
 
 if [ $# == 0 ] 
 then
