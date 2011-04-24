@@ -30,6 +30,10 @@ public class TestIndexOneDoc {
 			word = theWord;
 			pos = thePos;
 		}
+		
+		public String toString() {
+			return "Truth[(" + word + "," + pos + ")]";
+		}
 	}
 	
 	
@@ -55,18 +59,18 @@ public class TestIndexOneDoc {
 				return true;
 			
 			// Get the result summary: (docid,numPostings):
-			nextRes = (Tuple) resultIt.next();
-			summaryDocID = (String) nextRes.get(0);
-			summaryNumPostings = (Integer) nextRes.get(1);
-			if ((summaryDocID != uuid) || summaryNumPostings != groundTruth.size())
-				return false;
+			//nextRes = (Tuple) resultIt.next();
+			//summaryDocID = (String) nextRes.get(0);
+			//summaryNumPostings = (Integer) nextRes.get(1);
+			//if ((summaryDocID != uuid) || summaryNumPostings != groundTruth.size())
+			//	return false;
 			
 			while (resultIt.hasNext()) {
 				if (! truthIt.hasNext())
 					return false;
 				nextRes   = (Tuple) resultIt.next();
 				nextTruth = truthIt.next();
-				if (!nextRes.get(0).equals(nextTruth.word) || !nextRes.get(1).equals(summaryDocID) || !nextRes.get(2).equals(nextTruth.pos))
+				if (!nextRes.get(0).equals(nextTruth.word) || !nextRes.get(1).equals(uuid) || !nextRes.get(2).equals(nextTruth.pos))
 					return false;
 			}
 			if (truthIt.hasNext())
@@ -99,6 +103,7 @@ public class TestIndexOneDoc {
 			parms.set(1, "On a sunny day");
 			assertTrue(matchOutput(func.exec(parms), new ArrayList<Truth>() {
 				{
+					add(tester.new Truth("na", 2));
 					add(tester.new Truth("sunny", 2));
 					add(tester.new Truth("day", 3));
 				};
@@ -108,6 +113,7 @@ public class TestIndexOneDoc {
 			parms.set(contentIndex, "On a http://infolab.stanford.edu/~user sunny day.");
 			assertTrue(matchOutput(func.exec(parms), new ArrayList<Truth>() {
 				{
+					add(tester.new Truth("na", 3));
 					add(tester.new Truth("http://infolab.stanford.edu/~user", 2));
 					add(tester.new Truth("sunny", 3));
 					add(tester.new Truth("day", 4));
@@ -119,15 +125,19 @@ public class TestIndexOneDoc {
 			parms.set(contentIndex, "ftps://my.domain/");
 			assertTrue(matchOutput(func.exec(parms), new ArrayList<Truth>() {
 				{
+					add(tester.new Truth("na", 1));
 					add(tester.new Truth("ftps://my.domain/", 0));
 				};
 			}));
 
 			// Empty string:
 			parms.set(contentIndex, "");
-			assertTrue(matchOutput(func.exec(parms), new ArrayList<Truth>()));
-
-
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<Truth>() {
+				{
+					add(tester.new Truth("na", 0));
+				};
+			}));
+			
 			// Include stopwords:
 			Tuple input = tupleFac.newTuple();
 			input.append(uuid);
@@ -136,6 +146,7 @@ public class TestIndexOneDoc {
 						
 			assertTrue(matchOutput(func.exec(input), new ArrayList<Truth>() {
 				{
+					add(tester.new Truth("na", 4));
 					add(tester.new Truth("The", 0));
 					add(tester.new Truth("sun", 1));
 					add(tester.new Truth("is", 2));
@@ -153,6 +164,7 @@ public class TestIndexOneDoc {
 						
 			assertTrue(matchOutput(func.exec(input), new ArrayList<Truth>() {
 				{
+					add(tester.new Truth("na", 4));
 					add(tester.new Truth("The", 0));
 					add(tester.new Truth("sun", 1));
 					add(tester.new Truth("is", 2));
