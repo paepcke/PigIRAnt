@@ -4,11 +4,12 @@
 # command line paramters. The script requires the existence of
 # an index file as produced by buildWebBaseIndex.
 
-USAGE="Usage: makeWordPairDistances [{-h | --help}] \n
-                           \t\t\t [{-v | --version}] \n
-                           \t\t\t [{-x | --execmode] {local | mapreduce}] \n
-                           \t\t\t [{-d | --destdir} <destinationDirectory>] (default is pwd) \n
-                           \t\t\t <indexFileName> \n
+USAGE="Usage: makeWordPairDistances \n 
+ 	       	            \t\t [{-h | --help}] \n
+                            \t\t [{-v | --version}] \n
+                            \t\t [{-x | --execmode] {local | mapreduce}] \n
+                            \t\t [{-d | --destdir} <destinationDirectory>] (default is pwd) \n
+                            \t\t <indexFileName> \n
     \tExample: makeWordPairDistances -d /user/doe/mycounts MyIndices/gov-04-2007_index.idx \n"
 
 PROGVERSION=1.0

@@ -56,7 +56,7 @@
 */
 
  -- STORE command for the word distances:
-%declare WORD_DISTANCES_STORE_COMMAND "STORE sorted INTO '$WORD_DISTS' USING PigStorage(',');";
+%declare WORD_DISTANCES_STORE_COMMAND "STORE flatCohablist INTO '$WORD_DISTS_DEST' USING PigStorage(',');";
 
 REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
 REGISTER $USER_CONTRIB/PigIR.jar;
@@ -102,8 +102,9 @@ docsGroupedDocID = GROUP docs BY (docID);
 */
 
 cohablist = FOREACH docsGroupedDocID GENERATE flatten(pigir.pigudf.MakeWordPairDistances(docs));
-sorted    = ORDER cohablist BY word1,word2;
+flatCohablist = FOREACH cohablist GENERATE FLATTEN(org.apache.pig.piggybank.evaluation.util.ToBag(*));
 
-DUMP sorted;
-			
-// $WORD_DISTANCES_STORE_COMMAND;
+--sorted    = ORDER flatCohablist BY $0;
+
+--DUMP flatCohablist;
+$WORD_DISTANCES_STORE_COMMAND;
