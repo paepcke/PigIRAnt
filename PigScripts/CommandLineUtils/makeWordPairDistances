@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# Script that runs the PigScript makeWordPairDistances.pig with
+# command line paramters. The script requires the existence of
+# an index file as produced by buildWebBaseIndex.
+
+USAGE="Usage: makeWordPairDistances [{-h | --help}] \n
+                           \t\t\t [{-v | --version}] \n
+                           \t\t\t [{-x | --execmode] {local | mapreduce}] \n
+                           \t\t\t [{-d | --destdir} <destinationDirectory>] (default is pwd) \n
+                           \t\t\t <indexFileName> \n
+    \tExample: makeWordPairDistances -d /user/doe/mycounts MyIndices/gov-04-2007_index.idx \n"
+
+PROGVERSION=1.0
+EXEC_MODE=mapreduce
+DEST_DIR=`pwd`
+
+SHORTOPTS="hvx:d:"
+LONGOPTS="help,version,execmode:,destdir:"
+
+ARGS=`getopt -s bash --options=$SHORTOPTS  \
+  --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
+
+eval set -- "$ARGS"
+
+while true; do
+   case $1 in
+      -h|--help)
+         echo -e $USAGE
+         exit 0
+         ;;
+      -v|--version)
+         echo "$PROGVERSION"
+	 exit 0
+         ;;
+      -x|--execmode)
+         shift
+         EXEC_MODE=$1
+         ;;
+      -d|--destdir)
+         shift
+         DEST_DIR=$1
+         ;;
+      --)
+         shift
+         break
+         ;;
+      *)
+         shift
+         break
+         ;;
+   esac
+   # Throw away the '--' that's added by getopt.
+   # The -- case above doesn't get hit when user
+   # forgets to put in any required args.
+   shift
+done
+
+if [ $# == 0 ] 
+then
+    echo "Missing index file name."
+    echo -e $USAGE
+    exit -1
+else
+    INDEX_FILE_PATH=$1
+fi
+
+# If we are running in cygwin, we have to convert the 
+# path to the Pig script into a Windows path:
+
+export SCRIPT_DIR=`dirname $0`
+if [[ `uname` == *CYGWIN* ]]
+then 
+  export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
+fi
+
+# Check whether the word distances target file already exists.
+# If so, Pig would run for a long time, and then die. Make
+# this more fail-fast:
+
+DEST_FILE=${DEST_DIR}/${INDEX_FILE_PATH}_wordDists.idx
+EXISTENCE=`hadoop fs -stat $DEST_FILE 2> /dev/null` 
+if [ -n "$EXISTENCE" ]
+then
+    echo "File $DEST_FILE already exists. Quitting."
+    exit -1
+fi
+
+pigrun -x $EXEC_MODE \
+        INDEX_FILE=$INDEX_FILE_PATH \
+        WORD_DISTS_DEST=$DEST_FILE \
+        ${SCRIPT_DIR}/makeWordPairDistances.pig
+
+exit 0
+
