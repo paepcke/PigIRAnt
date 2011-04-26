@@ -16,14 +16,24 @@ import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 import org.apache.pig.impl.logicalLayer.schema.Schema.FieldSchema;
 
+// TODO: HREF is missed
+//       de-tag anchor text; throw out images
+//       grap alt text
+
+
 /**
  * Given an HTML string, return a tuple of strings that comprise
- * the anchor texts in the HTML.
+ * the anchor texts in the HTML. All HTML tags are stripped from
+ * the anchor texts.
  * 
  * @author paepcke
  *
  */
 public class AnchorText extends EvalFunc<Tuple> {
+	
+	private final int GROUP_ANCHOR_TEXT = 1;
+	private final int GROUP_ALT_TEXT    = 2;
+	private final int GROUP_TITLE_TEXT  = 2;
 	
 	int MIN_LINK_LENGTH = "<a href=\"\"></a>".length();
     TupleFactory mTupleFactory = TupleFactory.getInstance();
@@ -32,7 +42,14 @@ public class AnchorText extends EvalFunc<Tuple> {
 	// The '?' after the .* before the </a> turns this 
 	// match non-greedy. Without the question mark, the
 	// .* would eat all the html to the last </a>:
-	private Pattern pattern = Pattern.compile("<a[\\s]+href[\\s]*=[\\s]*\"[^>]*>(.*?)</a>");
+	private Pattern anchorTextPattern = Pattern.compile("<a[\\s]+href[\\s]*=[\\s]*\"[^>]*>(.*?)</a>");
+	
+	// Matcher to extract text of the alt attribute:
+	private Pattern altTextPattern = Pattern.compile("<a[\\s]+href.*(alt|ALT|Alt)[\\s]*=[^\\s]*\"(([^\"]|[\\\"])*)\"");
+	
+	// Matcher to extract the 'title' attribute: <element title="Tooltip or similar text">. 
+	// That is, not the title element of the entire HTML page:
+	private Pattern titleTextPattern = Pattern.compile("[^\\\\]<a.*(title|TITLE|Title)[\\s]*=[^\\s]*\"(([^\"]|[\\\"])*)\"");
     
     public Tuple exec(Tuple input) throws IOException {
     	
@@ -48,10 +65,20 @@ public class AnchorText extends EvalFunc<Tuple> {
     	} catch (ClassCastException e) {
     		throw new IOException("AnchorText(): bad input: " + input);
     	}
-		Matcher matcher = pattern.matcher(html);
-		while(matcher.find()){
-			output.append(matcher.group(1));
+		Matcher anchorTextMatcher = anchorTextPattern.matcher(html);
+		Matcher altTextMatcher    = altTextPattern.matcher(html);
+		Matcher titleTextMatcher  = titleTextPattern.matcher(html);
+		
+		while(anchorTextMatcher.find()){
+			output.append(StripHTML.extractText(anchorTextMatcher.group(GROUP_ANCHOR_TEXT)));
 		}
+		while(altTextMatcher.find()){
+			output.append(StripHTML.extractText(altTextMatcher.group(GROUP_ALT_TEXT)));
+		}
+		while(titleTextMatcher.find()){
+			output.append(StripHTML.extractText(titleTextMatcher.group(GROUP_TITLE_TEXT)));
+		}
+		
 		return output;
     }
     

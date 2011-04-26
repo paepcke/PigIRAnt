@@ -11,12 +11,9 @@ import org.apache.pig.EvalFunc;
 import org.apache.pig.FuncSpec;
 import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
-import org.apache.pig.data.TupleFactory;
 import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 import org.jsoup.Jsoup;
-
-import pigir.Common;
 
  /**
   *	 Given tuple whose first element contains
@@ -91,7 +88,7 @@ public class StripHTML extends EvalFunc<String> {
     	return funcList; 
     }	
     
-	private String extractText(Reader reader) throws IOException {
+	private static String extractText(Reader reader) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		BufferedReader br = new BufferedReader(reader);
 		String line;
@@ -102,33 +99,7 @@ public class StripHTML extends EvalFunc<String> {
 		return textOnly;
 	}
 	
-	private String extractText(String webPage) throws IOException {
+	public static synchronized String extractText(String webPage) throws IOException {
 		return extractText(new StringReader(webPage));
 	}
-    /* ---------------------------------   T E S T I N G ------------------------------*/
-
-    private boolean doTests() {
-    	
-    	String htmlStr = "<head><html>This is <b>bold</b> and a <a href='http://test.com'>link anchor</a></html></head>";
-    	//Tuple webPage = TupleFactory.getInstance().newTuple(htmlStr);
-    	//Tuple input = TupleFactory.getInstance().newTuple(1);
-    	Tuple input = TupleFactory.getInstance().newTuple(htmlStr);
-    	String res;
-
-    	try {
-    		res = exec(input);
-    		System.out.println(res);
-    		System.out.println(outputSchema(Common.getTupleSchema(input)));
-    		System.out.println(getArgToFuncMapping());
-    	} catch (Exception e) {
-    		System.out.println(e.getMessage());
-    		return false;
-    	}
-    	System.out.println("All Good.");
-    	return true;
-    }
-    
-    public static void main(String[] args) {
-    	new StripHTML().doTests();
-    };
 }

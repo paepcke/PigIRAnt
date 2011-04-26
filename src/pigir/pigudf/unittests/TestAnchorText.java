@@ -53,6 +53,7 @@ public class TestAnchorText {
 		AnchorText func = new AnchorText();
 		TupleFactory tupleFac = TupleFactory.getInstance();
 		Tuple parms = tupleFac.newTuple(1);
+		String htmlStr;
 		
 		try {
 
@@ -61,11 +62,13 @@ public class TestAnchorText {
 			assertNull(func.exec(parms));
 			
 			// No link, long enough to possibly contain a link:
-			parms.set(0, "On a truly sunny day we walked along the beach, and smiled.");
+			htmlStr = "On a truly sunny day we walked along the beach, and smiled.";
+			parms.set(0, htmlStr);
 			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>()));
 			
 			// Correct and tightly spaced link:
-			parms.set(0, "On a <a href=\"http://foo/bar.html\">sunny</a> day");
+			htmlStr = "On a <a href=\"http://foo/bar.html\">sunny</a> day";
+			parms.set(0, htmlStr);
 			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					add("sunny");
@@ -73,7 +76,8 @@ public class TestAnchorText {
 			}));
 
 			// Correct link with spaces:
-			parms.set(0, "On a <a href   =   \"http://foo/bar.html\">sunny</a> day");
+			htmlStr = "On a <a href   =   \"http://foo/bar.html\">sunny</a> day";
+			parms.set(0, htmlStr);
 			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					add("sunny");
@@ -81,17 +85,80 @@ public class TestAnchorText {
 			}));
 			
 			// No quotes around the URL ==> Not taken as a link:
-			parms.set(0, "On a <a href=http://foo/bar.html>sunny</a> day");
+			htmlStr = "On a <a href=http://foo/bar.html>sunny</a> day";
+			parms.set(0, htmlStr);
 			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>()));
 
 			// Multiple links, and three spaces in second anchor:
-			parms.set(0, "On a <a href=\"http://foo/bar.html\">sunny</a> day in <a href=\"https:8090//blue/bar?color=green\">in March   </a> we ran.");
+			htmlStr = "On a <a href=\"http://foo/bar.html\">sunny</a> day in <a href=\"https:8090//blue/bar?color=green\">in March   </a> we ran.";
+			parms.set(0, htmlStr);
 			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					add("sunny");
-					add("in March   ");
+					add("in March");
 				};
 			}));
+			
+			// Link that's nothing but tagged HTML:
+			htmlStr = "On a <a href=\"http://foo/bar.html\"><img src=/foo/bar></a> we ran.";
+			parms.set(0, htmlStr);
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
+				{
+					add("");
+				};
+			}));
+			
+			// ALT text:
+			htmlStr = "Foo <a href=\"http://www.blue/red\" alt=\"This is an alt text.\">body</a>";
+			parms.set(0,htmlStr);
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
+				{
+					add("body");
+					add("This is an alt text.");
+				};
+			}));
+
+			// ALT text with embedded escaped double quotes:
+			htmlStr = "Foo <a href=\"http://www.blue/red\" alt=\"This is an \\\"alt\\\" text.\">body</a>";
+			parms.set(0,htmlStr);
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
+				{
+					add("body");
+					add("This is an \\\"alt\\\" text.");
+				};
+			}));
+			
+			// Capitalized ALT text with embedded escaped double quotes:
+			htmlStr = "Foo <a href=\"http://www.blue/red\" ALT=\"This is an \\\"alt\\\" text.\">body</a>";
+			parms.set(0,htmlStr);
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
+				{
+					add("body");
+					add("This is an \\\"alt\\\" text.");
+				};
+			}));
+			
+			
+			// Title text:
+			htmlStr = "Foo <a href=\"http://www.blue/red\" title=\"This is a title text.\">body</a>";
+			parms.set(0,htmlStr);
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
+				{
+					add("body");
+					add("This is a title text.");
+				};
+			}));
+			
+			// Caps Title text:
+			htmlStr = "Foo <a href=\"http://www.blue/red\" TITLE=\"This is a title text.\">body</a>";
+			parms.set(0,htmlStr);
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
+				{
+					add("body");
+					add("This is a title text.");
+				};
+			}));
+			
 			
 		} catch (IOException e) {
 			System.out.println("Failed with IOException: " + e.getMessage());
