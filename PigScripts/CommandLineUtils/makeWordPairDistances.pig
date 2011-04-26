@@ -47,13 +47,25 @@
  *                to be computed.
  *   $WORD_DISTS_DEST is the full path for the destination
  *                file.
+ *    $SORT0, $SORT1,...,$SORT7  see below
+ *    
  *   $PIG_HOME points to root of Pig installation
  *   $USER_CONTRIB points to location of PigIR.jar
  *   $USER_CONTRIB points to location of jsoup-1.5.2.jar
-* 
+ * 
  * @author "Andreas Paepcke"
  *
 */
+
+-- Declare the complete ORDER command, which will either be
+-- just comment sequences ('--'), or they will be the 
+-- fragments of: 
+--    "flatCohablist = ORDER flatCohablist BY word1,word2 PARALLEL 5;"
+-- I had trouble passing such a string into the script, so it comes
+-- in pieces from the bash script makeWordPairDistances.pig. 
+-- Horrible hack!
+
+%declare SORT_COMMAND "$SORT0 $SORT1 $SORT2 $SORT3 $SORT4 $SORT5 $SORT6 $SORT7";
 
  -- STORE command for the word distances:
 %declare WORD_DISTANCES_STORE_COMMAND "STORE flatCohablist INTO '$WORD_DISTS_DEST' USING PigStorage(',');";
@@ -102,9 +114,28 @@ docsGroupedDocID = GROUP docs BY (docID);
 */
 
 cohablist = FOREACH docsGroupedDocID GENERATE flatten(pigir.pigudf.MakeWordPairDistances(docs));
-flatCohablist = FOREACH cohablist GENERATE FLATTEN(org.apache.pig.piggybank.evaluation.util.ToBag(*));
 
---sorted    = ORDER flatCohablist BY $0;
+/* Get ((w1,w2,dist,docID))
+       ((w3,w4,dist,docID))
+            ...
+*/            
+tmpCohablist = FOREACH cohablist GENERATE 
+	FLATTEN(org.apache.pig.piggybank.evaluation.util.ToBag(*))
+	AS (oneDist: tuple (word1:chararray, word2:chararray, distance:int, docID:chararray));
 
---DUMP flatCohablist;
+
+/* Get the final:
+	   (w1,w2,dist,docID)
+       (w3,w4,dist,docID)
+*/
+flatCohablist = FOREACH tmpCohablist GENERATE 
+	FLATTEN($0) AS (word1:chararray, word2:chararray, distance:int, docID:chararray);
+	
+-- The following command is a sequence of "--", if the command line
+-- to the makeWordPairDistances script did not specify
+-- the --sorted (or -s) option. Else it contains an ORDER
+-- command: "flatCohablist = ORDER flatCohablist BY word1,word2 PARALLEL 5;"	
+
+$SORT_COMMAND;
+
 $WORD_DISTANCES_STORE_COMMAND;

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Script that runs the PigScript webBaseWordCount.pig with
+# Script that runs the PigScript webBaseAnchorText.pig with
 # command line paramters.
 
-USAGE="Usage: webBaseWordCount
+USAGE="Usage: webBaseAnchorText
                          \t\t\t [{-h | --help}] \n
                          \t\t\t [{-v | --version}] \n
                          \t\t\t [{-x | --execmode] {local | mapreduce}] \n
@@ -12,8 +12,8 @@ USAGE="Usage: webBaseWordCount
                          \t\t\t [{-s | --startsite} <startSite>] (default is first site) \n
                          \t\t\t [{-e | --endsite} <endSite>] (default is last site) \n
                          \t\t\t <crawlName> \n
-    \tExample: webBaseWordCount -d /user/doe/mycounts --startsite www.emus.com gov-04-2007 \n
-    \tExample: webBaseWordCount --numpages 2 gov-04-2007"
+    \tExample: webBaseAnchorText -d /user/doe/myanchors --startsite www.emus.com gov-04-2007 \n
+    \tExample: webBaseAnchorText --numpages 2 gov-04-2007"
 
 
 PROGVERSION=1.0
@@ -138,14 +138,14 @@ ROOT_DEST_NAME=${DEST_DIR}/${CRAWL_NAME}_${TMP_NUM_PAGES}_${TMP_START_SITE}_${TM
 
 
 
-# Check whether the word count target file exists.
+# Check whether the anchor text target file exists.
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${ROOT_DEST_NAME}_wordCount.cnt 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${ROOT_DEST_NAME}_anchorText.idx 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${ROOT_DEST_NAME}_wordCount.cnt already exists. Quitting."
+    echo "File ${ROOT_DEST_NAME}_anchorText.idx already exists. Quitting."
     exit -1
 fi
 
@@ -158,8 +158,8 @@ fi
 CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
 
 pigrun -x $EXEC_MODE \
-        WORD_COUNT_DEST=${ROOT_DEST_NAME}_wordCount.cnt \
+        ANCHOR_TEXT_DEST=${ROOT_DEST_NAME}_anchorText.idx \
         CRAWL_SOURCE=$CRAWL_SOURCE \
-        ${SCRIPT_DIR}/webBaseWordCount.pig
+        ${SCRIPT_DIR}/webBaseAnchorText.pig
 
 exit 0

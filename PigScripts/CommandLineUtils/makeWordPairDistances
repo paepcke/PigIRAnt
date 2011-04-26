@@ -9,15 +9,24 @@ USAGE="Usage: makeWordPairDistances \n
                             \t\t [{-v | --version}] \n
                             \t\t [{-x | --execmode] {local | mapreduce}] \n
                             \t\t [{-d | --destdir} <destinationDirectory>] (default is pwd) \n
+                            \t\t [{-s | --sorted}] (default is not sorted. Sorted is factor of 3 slower) \n
                             \t\t <indexFileName> \n
     \tExample: makeWordPairDistances -d /user/doe/mycounts MyIndices/gov-04-2007_index.idx \n"
 
 PROGVERSION=1.0
 EXEC_MODE=mapreduce
-DEST_DIR=`pwd`
+# Default destination is the
+# cluster's HDFS home directory of
+# the user who is issuing the 
+# command. So, get the non-HDFS
+# $HOME, chop off the last element,
+# and prepend our cluster's HDFS
+# '/user/' user directory:
+DEST_DIR=/user/`basename $HOME`
+SORTED=0
 
-SHORTOPTS="hvx:d:"
-LONGOPTS="help,version,execmode:,destdir:"
+SHORTOPTS="hvx:d:s"
+LONGOPTS="help,version,execmode:,destdir:,sorted"
 
 ARGS=`getopt -s bash --options=$SHORTOPTS  \
   --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
@@ -42,6 +51,9 @@ while true; do
          shift
          DEST_DIR=$1
          ;;
+      -s|--sorted)
+	 SORTED=1
+	 ;;
       --)
          shift
          break
@@ -87,9 +99,49 @@ then
     exit -1
 fi
 
+# Declare the complete store command in pieces. It will be empty
+# if the -s/--sorted command was not issued on the command line.
+# Else it will be "ORDER flatCohablist BY word1,word2 PARALLEL 5;"
+# I had trouble passing such a string into the script, so it comes
+# in pieces from here, and is put together in makeWordPairDistances.pig
+# Horrible hack!
+
+if [ $SORTED == 1 ]
+then
+   SORT_SUB0="flatCohablist"
+   SORT_SUB1="\="
+   SORT_SUB2="ORDER"
+   SORT_SUB3="flatCohablist"
+   SORT_SUB4="BY"
+   SORT_SUB5="word1,word2"
+   SORT_SUB6="PARALLEL"
+   SORT_SUB7="5;"
+else
+   SORT_SUB0="-- "
+   SORT_SUB1="--"
+   SORT_SUB2="--"
+   SORT_SUB3="--"
+   SORT_SUB4="--"
+   SORT_SUB5="--"
+   SORT_SUB6="--"
+   SORT_SUB7="--"
+fi
+
+#***********
+#echo "$SORT_SUB0 $SORT_SUB1 $SORT_SUB2 $SORT_SUB3 $SORT_SUB4 $SORT_SUB5 $SORT_SUB6 $SORT_SUB7"
+#***********
+
 pigrun -x $EXEC_MODE \
         INDEX_FILE=$INDEX_FILE_PATH \
         WORD_DISTS_DEST=$DEST_FILE \
+        SORT0=$SORT_SUB0 \
+        SORT1=$SORT_SUB1 \
+        SORT2=$SORT_SUB2 \
+        SORT3=$SORT_SUB3 \
+        SORT4=$SORT_SUB4 \
+        SORT5=$SORT_SUB5 \
+        SORT6=$SORT_SUB6 \
+        SORT7=$SORT_SUB7 \
         ${SCRIPT_DIR}/makeWordPairDistances.pig
 
 exit 0

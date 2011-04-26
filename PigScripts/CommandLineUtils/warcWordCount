@@ -12,7 +12,15 @@ USAGE="Usage: warcWordCoun [{-h | --help}] \n
 
 PROGVERSION=1.0
 EXEC_MODE=mapreduce
-DEST_DIR=`pwd`
+# Default destination is the
+# cluster's HDFS home directory of
+# the user who is issuing the 
+# command. So, get the non-HDFS
+# $HOME, chop off the last element,
+# and prepend our cluster's HDFS
+# '/user/' user directory:
+DEST_DIR=/user/`basename $HOME`
+
 
 SHORTOPTS="hvx:d:"
 LONGOPTS="help,version,execmode:,destdir:"
