@@ -48,7 +48,7 @@ public class TestAnchorText {
 			);
 			
 			pserver.registerQuery(
-					"anchors = FOREACH docs GENERATE pigir.pigudf.AnchorText(content);");
+					"anchors = FOREACH docs GENERATE pigir.pigudf.AnchorAltTitleText(content);");
 
 			Common.print(pserver, "anchors");
 					

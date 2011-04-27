@@ -1,7 +1,19 @@
 #!/bin/bash
 
 # Script that runs the PigScript buildWebBaseIndex.pig with
-# command line paramters.
+# command line paramters. Outputs two files: the index, which
+# maps words to occurrence pages and positions within those pages,
+# and a map from the docIDs used in the above, to URLs of the
+# respective documents. 
+#
+# Output file names are:
+#    <destDir>/<crawlName>_<numPages>_<startSite>_<endSite>_index.idx
+#    <destDir>/<crawlName>_<numPages>_<startSite>_<endSite>_urlMap.idx
+#
+# Defaults are: <destDir>: HDFS home directory of current user
+#               <numPages>: 'allPages'
+#               <startSite>: 'firstSite'
+#               <endSite>: 'lastSite'
 
 USAGE="Usage: buildWebBaseIndex [{-h | --help}] \n
                          \t\t\t [{-v | --version}] \n
@@ -108,28 +120,56 @@ then
   export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
 fi
 
+# Construct a path name root for the index.
+# Like this: <destDir>/<crawlName>_numPages_startSite_endSite,
+# where defaults are made to be: allPages, firstSite, lastSite
+
+if [ -z $NUM_PAGES ]
+then
+    TMP_NUM_PAGES=allPages
+else
+    TMP_NUM_PAGES=$NUM_PAGES
+fi
+
+if [ -z $START_SITE ]
+then
+    TMP_START_SITE=firstSite
+else
+    TMP_START_SITE=$START_SITE
+fi
+    
+if [ -z $END_SITE ]
+then
+    TMP_END_SITE=lastSite
+else
+    TMP_END_SITE=$END_SITE
+fi
+    
+ROOT_DEST_NAME=${DEST_DIR}/${CRAWL_NAME}_${TMP_NUM_PAGES}_${TMP_START_SITE}_${TMP_END_SITE}
+
+
 # Check whether either of the two index target files exists.
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${CRAWL_NAME}_urlMap.idx 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${ROOT_DEST_NAME}_urlMap.idx 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${CRAWL_NAME}_urlMap.idx already exists. Quitting."
+    echo "File ${DEST_DIR}/${ROOT_DEST_NAME}_urlMap.idx already exists. Quitting."
     exit -1
 fi
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${CRAWL_NAME}_index.idx 2> /dev/null`
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${ROOT_DEST_NAME}_index.idx 2> /dev/null`
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${CRAWL_NAME}_index.idx already exists. Quitting."
+    echo "File ${DEST_DIR}/${ROOT_DEST_NAME}_index.idx already exists. Quitting."
     exit -1
 fi
 
 # Build the Pig STORE commands for storing the docID-->URL
 # mapping, and the index itself:
-URL_MAP_STORE_COMMAND="STORE URLMap INTO '${DEST_DIR}/${CRAWL_NAME}_urlMap.idx' USING PigStorage;"
-INDEX_STORE_COMMAND="STORE sortedPostings INTO '${TARGET_DIR}/${CRAWL_NAME}_index.idx' USING PigStorage;"
+URL_MAP_STORE_COMMAND="STORE URLMap INTO '${DEST_DIR}/${ROOT_DEST_NAME}_urlMap.idx' USING PigStorage;"
+INDEX_STORE_COMMAND="STORE sortedPostings INTO '${TARGET_DIR}/${ROOT_DEST_NAME}_index.idx' USING PigStorage;"
 
 # The crawl source is expected in the form: crawlName:numPages:startSite:endSite,
 # though numPages, startSite, and endSite are all optional. Rather than 
@@ -138,11 +178,11 @@ INDEX_STORE_COMMAND="STORE sortedPostings INTO '${TARGET_DIR}/${CRAWL_NAME}_inde
 # which is fine:
 
 CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
-TMP_INDEX_PATH=${DEST_DIR}/${CRAWL_NAME}_index.idx_tmp
+TMP_INDEX_PATH=${DEST_DIR}/${ROOT_DEST_NAME}_index.idx_tmp
 
 pigrun -x $EXEC_MODE \
-        URL_MAP_DEST=${DEST_DIR}/${CRAWL_NAME}_urlMap.idx \
-        INDEX_DEST=${DEST_DIR}/${CRAWL_NAME}_index.idx \
+        URL_MAP_DEST=${DEST_DIR}/${ROOT_DEST_NAME}_urlMap.idx \
+        INDEX_DEST=${DEST_DIR}/${ROOT_DEST_NAME}_index.idx \
         TMP_INDEX_DEST=$TMP_INDEX_PATH \
         CRAWL_SOURCE=$CRAWL_SOURCE \
         ${SCRIPT_DIR}/buildWebBaseIndex.pig

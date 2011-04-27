@@ -2,6 +2,8 @@
 
 # Script that runs the PigScript warcWordCount.pig with
 # command line paramters.
+#
+# Output file: <warcFilePathOnHDFS>_wordCount.cnt
 
 USAGE="Usage: warcWordCoun [{-h | --help}] \n
                            \t\t\t [{-v | --version}] \n

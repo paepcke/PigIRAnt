@@ -30,10 +30,17 @@ import org.apache.pig.impl.logicalLayer.schema.Schema.FieldSchema;
  *       will return:
  *         foo \
  * 
+ * Which of anchor text, alt text, and title text is included in
+ * the ouput is determined by the constructor. Passing the string
+ * "true" for the getAnchor, getAlt, and/or getTitle parameters
+ * will causes the respective text fragments to be included. 
+ * Similarly, passing the string "false" will suppress the respective
+ * type of text fragment. 
+ * 
  * @author paepcke
  *
  */
-public class AnchorText extends EvalFunc<Tuple> {
+public class AnchorAltTitleText extends EvalFunc<Tuple> {
 	
 	public static boolean GET_ANCHOR_TEXT = true;
 	public static boolean NO_ANCHOR_TEXT  = false;
@@ -42,14 +49,40 @@ public class AnchorText extends EvalFunc<Tuple> {
 	public static boolean GET_TITLE_TEXT  = true;
 	public static boolean NO_TITLE_TEXT   = false;
 
-	
 	private final int GROUP_ANCHOR_TEXT = 2;
 	private final int GROUP_ALT_TEXT    = 3;
 	private final int GROUP_TITLE_TEXT  = 2;
 	
+	private boolean getAnchors = false;
+	private boolean getAlts    = false;
+	private boolean getTitles  = false;
+	
 	int MIN_LINK_LENGTH = "<a href=\"\"></a>".length();
     TupleFactory mTupleFactory = TupleFactory.getInstance();
 	public final Logger logger = Logger.getLogger(getClass().getName());
+	
+	/**
+	 * Constructor used to determine which types of text fragments are
+	 * extracted from HTML. Note that at least one of the parameters
+	 * must be the string "true".
+	 * Note that these parameters are *strings*, not booleans. This is
+	 *      because I don't see how to pass booleans from a Pig script.
+	 *      
+	 * @param getAnchor String "true" or "false" to control whether anchor text is included
+	 * @param getAlt String "true" or "false" to control whether ALT tag text is included
+	 * @param getTitle String "true" or "false" to control whether TITLE tag text is included
+	 * @throws IOException 
+	 */
+	public AnchorAltTitleText(String getAnchor, String getAlt, String getTitle) throws IOException {
+		if (getAnchor.equals("true"))
+			getAnchors = true;
+		if (getAlt.equals("true"))
+			getAlts = true;
+		if (getTitle.equals(true))
+			getTitles = true;
+		if (!getAnchors && !getAlts && !getTitles)
+			throw new IOException("At least one of getAnchor, getAlt, and getTitle must be the string 'true'.");
+	}
 	
     /**
      * Main method for extracting anchor text, alt text, and title 
@@ -61,7 +94,7 @@ public class AnchorText extends EvalFunc<Tuple> {
      * @return Tuple of strings with all extracted text fragments. 
      * @throws IOException
      */
-    public Tuple exec(Tuple input, boolean getAnchorText, boolean getAltText, boolean getTitleAttributeText) throws IOException {
+    public Tuple exec(Tuple input) throws IOException {
     	
     	String html = null;
     	Tuple output = mTupleFactory.newTuple();
@@ -76,7 +109,8 @@ public class AnchorText extends EvalFunc<Tuple> {
     		throw new IOException("AnchorText(): bad input: " + input);
     	}
     	
-    	if (getAnchorText) {
+    	//if (getAnchorText) {
+    	if (getAnchors) {
     		// Matcher to extract anchor text. The '?' after the .* 
     		// before the </a> turns this  match non-greedy. Without 
     		// the question mark, the .* would eat all the html to 
@@ -89,7 +123,8 @@ public class AnchorText extends EvalFunc<Tuple> {
     		}
     	}
 		
-		if (getAltText) {
+		//if (getAltText) {
+    	if (getAlts) {
 			// Matcher to extract text of the alt attribute. None-escaped left angle
 			// plus some form of the tags IMG, AREA, or INPUT.
 			// The question mark after the * near the end
@@ -111,9 +146,9 @@ public class AnchorText extends EvalFunc<Tuple> {
 				output.append(StripHTML.extractText(altTextMatcher.group(GROUP_ALT_TEXT)));
 			}
 		}
-			//Foo <img alt="Fun image." src="http://foo/bar"> <b TITLE="Bold for emphasis."> <a href="http://www.blue/red" TITLE="This is a title text.">body</a>
 		
-		if (getTitleAttributeText) {
+		//if (getTitleAttributeText) {
+    	if (getTitles) {
 			// Matcher to extract the 'title' attribute: <element title="Tooltip or similar text">. 
 			// That is, not the title element of the entire HTML page:
 			// Start looking for a not-escaped opening tag:
@@ -125,30 +160,6 @@ public class AnchorText extends EvalFunc<Tuple> {
 		}
 		
 		return output;
-    }
-    
-    /* (non-Javadoc)
-     * @see org.apache.pig.EvalFunc#exec(org.apache.pig.data.Tuple)
-     * Exctract anchor text from HTML string.
-     * @param input Single-field tuple with an HTML string
-     * @return Tuple of anchor text strings.
-     */
-    public Tuple exec(Tuple input) throws IOException {
-    	return exec(input, GET_ANCHOR_TEXT, NO_ALT_TEXT, NO_TITLE_TEXT);
-    }
-    
-    /**
-     * Extract anchor text and/or ALT attribute body text from HTML string.
-     * @param input One-tuple with HTML string
-     * @param getAnchorText Boolean to control whether Anchor attribute body text is to be extracted. Values: 
-     * 						AnchorText.GET_ANCHOR_TEXT, or AnchorText.NO_ANCHOR_TEXT.
-     * @param getAltText Boolean to control whether ALT attribute body text is to be extracted. Values:
-     * 						AnchorText.GET_ALT_TEXT, or AnchorText.NO_ALT_TEXT.
-     * @return Tuple of strings with the requested text fragments.
-     * @throws IOException
-     */
-    public Tuple exec(Tuple input, boolean getAnchorText, boolean getAltText) throws IOException {
-    	return exec(input, getAnchorText, getAltText, NO_TITLE_TEXT);
     }
     
 	public Schema outputSchema(Schema input) {
@@ -174,25 +185,6 @@ public class AnchorText extends EvalFunc<Tuple> {
         htmlFieldSchema.add(new FieldSchema(null, DataType.CHARARRAY));  // the HTML document
         FuncSpec htmlParameterOnly = new FuncSpec(this.getClass().getName(), new Schema(htmlFieldSchema));
         funcSpecs.add(htmlParameterOnly);
-        
-        // Call with two parameters: an HTML string, and a boolean to 
-        // control whether ALT text should also be extracted (default is false):
-        List<FieldSchema> twoParmsFieldSchema = new ArrayList<FieldSchema>(2);
-        twoParmsFieldSchema.add(new FieldSchema(null, DataType.CHARARRAY));  // the HTML document
-        twoParmsFieldSchema.add(new FieldSchema(null, DataType.BOOLEAN));    // the ALT text yes/no
-        FuncSpec twoParms = new FuncSpec(this.getClass().getName(), new Schema(twoParmsFieldSchema));
-        funcSpecs.add(twoParms);
-        
-        // Call with three parameters: an HTML string, a boolean to 
-        // control whether ALT text should also be extracted (default is false),
-        // and a second boolean to control whether TITLE attribute text
-        // should also be extracted (default is false):
-        List<FieldSchema> threeParmsFieldSchema = new ArrayList<FieldSchema>(3);
-        threeParmsFieldSchema.add(new FieldSchema(null, DataType.CHARARRAY));  // the HTML document
-        threeParmsFieldSchema.add(new FieldSchema(null, DataType.BOOLEAN));    // the ALT text yes/no
-        threeParmsFieldSchema.add(new FieldSchema(null, DataType.BOOLEAN));    // the TITLE text yes/no
-        FuncSpec threeParms = new FuncSpec(this.getClass().getName(), new Schema(threeParmsFieldSchema));
-        funcSpecs.add(threeParms);
         
         return funcSpecs;
     }

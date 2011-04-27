@@ -3,6 +3,8 @@
 # Script that runs the PigScript makeWordPairDistances.pig with
 # command line paramters. The script requires the existence of
 # an index file as produced by buildWebBaseIndex.
+# 
+# The output file is named <indexFileName>_wordDists.idx
 
 USAGE="Usage: makeWordPairDistances \n 
  	       	            \t\t [{-h | --help}] \n

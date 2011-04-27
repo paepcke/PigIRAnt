@@ -50,8 +50,6 @@ public class TestIndexOneDoc {
 		Iterator<Truth> truthIt  = groundTruth.iterator();
 		Tuple nextRes = null;
 		Truth nextTruth = null;
-		String summaryDocID = null;
-		Integer summaryNumPostings = -1;
 
 		try {
 

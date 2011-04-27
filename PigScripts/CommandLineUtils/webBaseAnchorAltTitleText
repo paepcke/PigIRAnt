@@ -1,9 +1,21 @@
 #!/bin/bash
 
-# Script that runs the PigScript webBaseAnchorText.pig with
+# Script that runs the PigScript webBaseAnchorAltTitleText.pig with
 # command line paramters.
+#
+# Output file name is:
+#    <destDir>/<crawlName>_<numPages>_<startSite>_<endSite>_xxx.txt
+#
+# where xxx is composed of underscore-separated combinations of 
+# 'anchors', 'alts', and 'titles'. 
+# Example: gov-04-2007_10000_www.state.gov_lastSite_anchors_alts.txt
+#
+# Defaults are: <destDir>: HDFS home directory of current user
+#               <numPages>: 'allPages'
+#               <startSite>: 'firstSite'
+#               <endSite>: 'lastSite'
 
-USAGE="Usage: webBaseAnchorText
+USAGE="Usage: webBaseAnchorText \n
                          \t\t\t [{-h | --help}] \n
                          \t\t\t [{-v | --version}] \n
                          \t\t\t [{-x | --execmode] {local | mapreduce}] \n
@@ -11,9 +23,13 @@ USAGE="Usage: webBaseAnchorText
                          \t\t\t [{-n | --numpages} <numberOfPages>] (default is all) \n
                          \t\t\t [{-s | --startsite} <startSite>] (default is first site) \n
                          \t\t\t [{-e | --endsite} <endSite>] (default is last site) \n
+                         \t\t\t One or more of:\n
+                         \t\t\t\t [{-l | --linkanchors} (default is no link anchor text) \n
+                         \t\t\t\t [{-a | --alttext} (default is no ALT tag text) \n
+                         \t\t\t\t [{-t | --titletext} (default is no TITLE tag text) \n
                          \t\t\t <crawlName> \n
-    \tExample: webBaseAnchorText -d /user/doe/myanchors --startsite www.emus.com gov-04-2007 \n
-    \tExample: webBaseAnchorText --numpages 2 gov-04-2007"
+    \tExample: webBaseAnchorText -d /user/doe/myinfo --startsite www.emus.com --alttext gov-04-2007 \n
+    \tExample: webBaseAnchorText --numpages 2 --linkanchors --alttext --titletext gov-04-2007"
 
 
 PROGVERSION=1.0
@@ -31,8 +47,17 @@ NUM_PAGES=""
 START_SITE=""
 END_SITE=""
 
-SHORTOPTS="hvx:d:n:s:e:"
-LONGOPTS="help,version,execmode:,destdir:,numpages:,startsite:,endsite:"
+GET_ANCHORS="false"
+GET_ALTS="false"
+GET_TITLES="false"
+
+# Build a Pig call to the UDF 
+# AnchorAltTitleText(String content, boolean anchorText, boolean altText, boolean titleText).
+# Initialize to the first part:
+EXTRACT_CALL="pigir.pigudf.AnchorAltTitleText(content"
+
+SHORTOPTS="hvx:d:n:s:e:lat"
+LONGOPTS="help,version,execmode:,destdir:,numpages:,startsite:,endsite:,linkanchors,alttext,titletext"
 
 ARGS=`getopt -s bash --options=$SHORTOPTS  \
   --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
@@ -68,6 +93,15 @@ while true; do
       -e|--endsite)
          shift
          END_SITE=$1
+         ;;
+      -l|--linkanchors)
+         GET_ANCHORS="true"
+         ;;
+      -a|--alttext)
+         GET_ALTS="true"
+         ;;
+      -t|--titletext)
+         GET_TITLES="true"
          ;;
       --)
          shift
@@ -134,18 +168,46 @@ else
     TMP_END_SITE=$END_SITE
 fi
     
+# Construct the file name where the text fragments
+# will be stored. The name starts with the unique
+# identifier of how the crawl is retrieved (how many
+# pages, start Web site, etc.):
 ROOT_DEST_NAME=${DEST_DIR}/${CRAWL_NAME}_${TMP_NUM_PAGES}_${TMP_START_SITE}_${TMP_END_SITE}
 
+# Next, add '_anchors', '_alts' and/or '_titles',
+# to the file name, depending on the command line 
+# options:
+if [ $GET_ANCHORS == "true" ]
+then
+    ROOT_DEST_NAME=${ROOT_DEST_NAME}_anchors
+fi
 
+if [ $GET_ALTS == "true" ]
+then
+    ROOT_DEST_NAME=${ROOT_DEST_NAME}_alts
+fi
+
+if [ $GET_TITLES == "true" ]
+then
+    ROOT_DEST_NAME=${ROOT_DEST_NAME}_titles
+fi
+
+# Must specify at least one type of text fragment to extract:
+
+if (($GET_ANCHORS == "false") && ($GET_ALTS == "false") && ($GET_TITLES == "false"))
+then
+    echo "Must specify at least one type of fragments to extract: anchor texts, alt texts, or title texts (-l, -a, or -t)."
+    exit -1
+fi
 
 # Check whether the anchor text target file exists.
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${ROOT_DEST_NAME}_anchorText.idx 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${ROOT_DEST_NAME}.txt 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${ROOT_DEST_NAME}_anchorText.idx already exists. Quitting."
+    echo "File ${ROOT_DEST_NAME}.txt already exists. Quitting."
     exit -1
 fi
 
@@ -158,8 +220,11 @@ fi
 CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
 
 pigrun -x $EXEC_MODE \
-        ANCHOR_TEXT_DEST=${ROOT_DEST_NAME}_anchorText.idx \
+        TEXT_FRAGMENT_DEST=${ROOT_DEST_NAME}.txt \
         CRAWL_SOURCE=$CRAWL_SOURCE \
-        ${SCRIPT_DIR}/webBaseAnchorText.pig
+        GET_ANCHORS=$GET_ANCHORS \
+        GET_ALTS=$GET_ALTS \
+        GET_TITLES=$GET_TITLES \
+        ${SCRIPT_DIR}/webBaseAnchorAltTitleText.pig
 
 exit 0

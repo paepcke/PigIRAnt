@@ -1,0 +1,12 @@
+#! /bin/bash
+
+# To get total time: run with /usr/bin/time --format="Runtime (m:ss.millisec): %E"
+
+PigScripts/CommandLineUtils/buildWebBaseIndex -d /user/paepcke/WebBaseWork --numpages 10000 --startsite www.state.gov gov-03-2011
+PigScripts/CommandLineUtils/buildWebBaseIndex -d /user/paepcke/WebBaseWork --numpages 10000 --startsite www.state.gov gov-03-2010
+PigScripts/CommandLineUtils/buildWebBaseIndex -d /user/paepcke/WebBaseWork --numpages 10000 --startsite www.state.gov gov-06-2009
+PigScripts/CommandLineUtils/buildWebBaseIndex -d /user/paepcke/WebBaseWork --numpages 10000 --startsite www.state.gov gov-09-2008
+PigScripts/CommandLineUtils/buildWebBaseIndex -d /user/paepcke/WebBaseWork --numpages 10000 --startsite www.state.gov gov-09-2006
+PigScripts/CommandLineUtils/buildWebBaseIndex -d /user/paepcke/WebBaseWork --numpages 10000 --startsite www.state.gov gov-06-2006
+PigScripts/CommandLineUtils/buildWebBaseIndex -d /user/paepcke/WebBaseWork --numpages 10000 --startsite www.state.gov gov-09-2005
+PigScripts/CommandLineUtils/buildWebBaseIndex -d /user/paepcke/WebBaseWork --numpages 10000 --startsite www.state.gov gov-2004-09

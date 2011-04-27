@@ -1,0 +1,13 @@
+#! /bin/bash
+
+# To get total time: run with /usr/bin/time --format="Runtime (m:ss.millisec): %E"
+
+date
+PigScripts/CommandLineUtils/makeWordPairDistances -s -d WebBaseWork WebBaseWork/gov-03-2011_10000_www.state.gov_www.state.gov_index.idx &
+PigScripts/CommandLineUtils/makeWordPairDistances -s -d WebBaseWork WebBaseWork/gov-06-2009_10000_www.state.gov_www.state.gov_index.idx &
+PigScripts/CommandLineUtils/makeWordPairDistances -s -d WebBaseWork WebBaseWork/gov-09-2008_10000_www.state.gov_www.state.gov_index.idx &
+PigScripts/CommandLineUtils/makeWordPairDistances -s -d WebBaseWork WebBaseWork/gov-09-2006_10000_www.state.gov_www.state.gov_index.idx &
+PigScripts/CommandLineUtils/makeWordPairDistances -s -d WebBaseWork WebBaseWork/gov-06-2006_10000_www.state.gov_www.state.gov_index.idx &
+PigScripts/CommandLineUtils/makeWordPairDistances -s -d WebBaseWork WebBaseWork/gov-09-2005_10000_www.state.gov_www.state.gov_index.idx &
+PigScripts/CommandLineUtils/makeWordPairDistances -s -d WebBaseWork WebBaseWork/gov-2004-09_10000_www.state.gov_www.state.gov_index.idx &
+date

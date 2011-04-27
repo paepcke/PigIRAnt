@@ -10,29 +10,8 @@
      <CrawlName>URLIndex:
          (docID,url)
          
-   By default output is to HDFS directory /user/paepcke/webbase/Index
-
-   This script via buildWebBaseIndex:
-   
-      buildWebBaseIndex <crawlName>[:numPages[:startSite[:endSite]]]
-   
-   Examples:
-   
-    All pages from crawl gov-03-2009:
-      buildWebBaseIndex gov-03-2009
-      
-    The first 11 pages of crawl gov-03-2009:
-      buildWebBaseIndex gov-03-2009:11
-      
-    The first 11 pages of crawl gov-03-2009, starting at site access.usgs.gov
-      buildWebBaseIndex gov-03-2009:11:access.usgs.gov
-
-    The first 11 pages of crawl gov-03-2009, starting at site access.usgs.gov,
-    and ending at acrim.jpl.nasa.gov
-      buildWebBaseIndex gov-03-2009:11:access.usgs.gov:acrim.jpl.nasa.gov
-      
-    All pages of crawl gov-03-2009, starting at site access.usgs.gov
-      buildWebBaseIndex gov-03-2009::access.usgs.gov
+   Start this script via buildWebBaseIndex, and see
+   usage help for that script for details.
     
     Environment expectations:
       * $PIG_HOME points to root of Pig installation

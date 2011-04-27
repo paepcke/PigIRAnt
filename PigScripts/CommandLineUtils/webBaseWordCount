@@ -2,6 +2,14 @@
 
 # Script that runs the PigScript webBaseWordCount.pig with
 # command line paramters.
+#
+# Output file name is:
+#    <destDir>/<crawlName>_<numPages>_<startSite>_<endSite>_wordCount.cnt
+#
+# Defaults are: <destDir>: HDFS home directory of current user
+#               <numPages>: 'allPages'
+#               <startSite>: 'firstSite'
+#               <endSite>: 'lastSite'
 
 USAGE="Usage: webBaseWordCount
                          \t\t\t [{-h | --help}] \n
