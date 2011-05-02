@@ -50,7 +50,12 @@ public class TestAnchorAltTitleText {
 	@SuppressWarnings("serial")
 	public static void main(String[] args) throws ExecException {
 		
-		AnchorAltTitleText func = new AnchorAltTitleText();
+		AnchorAltTitleText func = null;
+		try {
+			func = new AnchorAltTitleText("true","true","true");
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		TupleFactory tupleFac = TupleFactory.getInstance();
 		Tuple parms = tupleFac.newTuple(1);
 		String htmlStr;
@@ -111,7 +116,7 @@ public class TestAnchorAltTitleText {
 			// ALT text:
 			htmlStr = "Foo <img src=\"http://www.blue/red\" alt=\"This is an alt text.\">";
 			parms.set(0,htmlStr);
-			assertTrue(matchOutput(func.exec(parms, AnchorAltTitleText.GET_ANCHOR_TEXT, AnchorAltTitleText.GET_ALT_TEXT), new ArrayList<String>() {
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					add("This is an alt text.");
 				};
@@ -120,7 +125,7 @@ public class TestAnchorAltTitleText {
 			// ALT text with embedded escaped double quotes:
 			htmlStr = "Foo <IMG src=\"http://www.blue/red\" alt=\"This is an \\\"alt\\\" text.\">";
 			parms.set(0,htmlStr);
-			assertTrue(matchOutput(func.exec(parms, AnchorAltTitleText.GET_ANCHOR_TEXT, AnchorAltTitleText.GET_ALT_TEXT), new ArrayList<String>() {
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					// add("This is an \\\"alt\\\" text.");   // Should return this, but:
 					add("This is an \\");                     // See comment in method.
@@ -130,37 +135,47 @@ public class TestAnchorAltTitleText {
 			// Capitalized ALT text:
 			htmlStr = "Foo <Img src=\"http://www.blue/red\" ALT=\"This is an alt text.\">";
 			parms.set(0,htmlStr);
-			assertTrue(matchOutput(func.exec(parms, AnchorAltTitleText.GET_ANCHOR_TEXT, AnchorAltTitleText.GET_ALT_TEXT), new ArrayList<String>() {
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					add("This is an alt text.");
 				};
 			}));
 			
 			
-			// Title text:
+			// Title text and anchor text:
 			htmlStr = "Foo <a href=\"http://www.blue/red\" title=\"This is a title text.\">body</a>";
 			parms.set(0,htmlStr);
-			assertTrue(matchOutput(func.exec(parms, AnchorAltTitleText.GET_ANCHOR_TEXT, AnchorAltTitleText.NO_ALT_TEXT, AnchorAltTitleText.GET_TITLE_TEXT), new ArrayList<String>() {
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					add("body");
 					add("This is a title text.");
 				};
 			}));
 			
-			// Caps Title text:
+			// Caps Title text; no anchor:
+			try {
+				func = new AnchorAltTitleText("false","false","true");
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 			htmlStr = "Foo <a href=\"http://www.blue/red\" TITLE=\"This is a title text.\">body</a>";
 			parms.set(0,htmlStr);
-			assertTrue(matchOutput(func.exec(parms, AnchorAltTitleText.NO_ANCHOR_TEXT, AnchorAltTitleText.NO_ALT_TEXT, AnchorAltTitleText.GET_TITLE_TEXT), new ArrayList<String>() {
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					add("This is a title text.");
 				};
 			}));
 			
 			// Alt and  Title text, but no anchor text:
+			try {
+				func = new AnchorAltTitleText("false","true","true");
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 			htmlStr = "Foo <img alt=\"Fun image.\" src=\"http://foo/bar\"> <b TITLE=\"Bold for emphasis.\"> <a href=\"http://www.blue/red\" TITLE=\"This is a title text.\">body</a>";
 			parms.set(0,htmlStr);
 			
-			assertTrue(matchOutput(func.exec(parms, AnchorAltTitleText.NO_ANCHOR_TEXT, AnchorAltTitleText.GET_ALT_TEXT, AnchorAltTitleText.GET_TITLE_TEXT), new ArrayList<String>() {
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					add("Fun image.");
 					add("Bold for emphasis.");
@@ -169,10 +184,15 @@ public class TestAnchorAltTitleText {
 			}));
 			
 			// Title text with embedded escaped double quote:
+			try {
+				func = new AnchorAltTitleText("false","false","true");
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 			htmlStr = "Foo <b TITLE=\"Bold for \\\"emphasis\\\".\">";
 			parms.set(0,htmlStr);
 			
-			assertTrue(matchOutput(func.exec(parms, AnchorAltTitleText.GET_ANCHOR_TEXT, AnchorAltTitleText.GET_ALT_TEXT, AnchorAltTitleText.GET_TITLE_TEXT), new ArrayList<String>() {
+			assertTrue(matchOutput(func.exec(parms), new ArrayList<String>() {
 				{
 					// add("Bold for \\\"emphasis\\\".");   // Should return this, but:
 					add("Bold for \\");                     // the bug in AnchorText.java returns this. Oh well.   

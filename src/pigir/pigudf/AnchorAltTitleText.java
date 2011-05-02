@@ -78,7 +78,7 @@ public class AnchorAltTitleText extends EvalFunc<Tuple> {
 			getAnchors = true;
 		if (getAlt.equals("true"))
 			getAlts = true;
-		if (getTitle.equals(true))
+		if (getTitle.equals("true"))
 			getTitles = true;
 		if (!getAnchors && !getAlts && !getTitles)
 			throw new IOException("At least one of getAnchor, getAlt, and getTitle must be the string 'true'.");
