@@ -71,6 +71,11 @@ while true; do
    shift
 done
 
+#echo "execMode : '$EXEC_MODE'"
+#echo "destDir  : '$DEST_DIR'"
+#echo "crawl: '$1'"
+
+
 if [ $# == 0 ] 
 then
     echo "Missing index file name."

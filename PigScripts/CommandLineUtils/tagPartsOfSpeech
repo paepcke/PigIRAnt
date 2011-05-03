@@ -1,0 +1,153 @@
+#!/bin/bash
+
+# Script that runs the PigScript tagPartsOfSpeech.pig with
+# command line paramters. 
+# 
+# The output file is named <crawlSource>_partsOfSpeech.pos
+
+USAGE="Usage: tagPartsOfSpeech \n 
+ 	       	            	\t\t [{-h | --help}] \n
+                            \t\t [{-v | --version}] \n
+                            \t\t [{-x | --execmode] {local | mapreduce}] \n
+                            \t\t [{-d | --destdir} <destinationDirectory>] (default is pwd) \n
+	                        \t\t [{-n | --numpages} <numberOfPages>] (default is all) \n
+    	                    \t\t [{-s | --startsite} <startSite>] (default is first site) \n
+        	                \t\t [{-e | --endsite} <endSite>] (default is last site) \n
+                            \t\t [{-t | --tagfilter} <HTML tag> ] only text within that tag is processed. (default is no special HTML tag filtering) \n
+                            \t\t [{-a | --allpos}] output all parts of speech, not just a few main ones. (default is only main ones) \n
+                            \t\t [{-p | --postags} <limit output to given POS tags>] space-separated list (default is all) \n
+                            \t\t <crawlName> \n"
+PROGVERSION=1.0
+EXEC_MODE=mapreduce
+# Default destination is the
+# cluster's HDFS home directory of
+# the user who is issuing the 
+# command. So, get the non-HDFS
+# $HOME, chop off the last element,
+# and prepend our cluster's HDFS
+# '/user/' user directory:
+DEST_DIR=/user/`basename $HOME`
+SORTED=0
+
+NUM_PAGES=""
+START_SITE=""
+END_SITE=""
+TAG_FILTER="body"
+MAIN_POS="true"
+POS_TAGS=""
+
+SHORTOPTS="hvx:d:n:s:e:t:ap:"
+LONGOPTS="help,version,execmode:,destdir:,numpages:,startsite:,endsite:,tagfilter:,allpos,postags:"
+
+ARGS=`getopt -s bash --options=$SHORTOPTS  \
+  --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
+
+eval set -- "$ARGS"
+
+while true; do
+   case $1 in
+      -h|--help)
+         echo -e $USAGE
+         exit 0
+         ;;
+      -v|--version)
+         echo "$PROGVERSION"
+	 	 exit 0
+         ;;
+      -x|--execmode)
+         shift
+         EXEC_MODE=$1
+         ;;
+      -d|--destdir)
+         shift
+         DEST_DIR=$1
+         ;;
+      -n|--numpages)
+         shift
+         NUM_PAGES=$1
+         ;;
+      -s|--startsite)
+         shift
+         START_SITE=$1
+         ;;
+      -e|--endsite)
+         shift
+         END_SITE=$1
+         ;;
+      -t|--tagfilter)
+      	 shift
+      	 TAG_FILTER=$1
+      	 ;;
+      -a|--allpos)
+         MAIN_POS="false"
+         ;;
+      -p|--postags)
+      	 shift
+         POS_TAGS=$1
+         ;;
+      --)
+         shift
+         break
+         ;;
+      *)
+         shift
+         break
+         ;;
+   esac
+   # Throw away the '--' that's added by getopt.
+   # The -- case above doesn't get hit when user
+   # forgets to put in any required args.
+   shift
+done
+
+echo "execMode : '$EXEC_MODE'"
+echo "destDir  : '$DEST_DIR'"
+echo "numPages : '$NUM_PAGES'"
+echo "startSite: '$START_SITE'"
+echo "endSite  : '$END_SITE'"
+echo "tagFilter: '$TAG_FILTER'"
+echo "mainPOS  : '$MAIN_POS'"
+echo "POSTags  : '$POS_TAGS'"
+echo "crawl: '$1'"
+
+if [ $# == 0 ] 
+then
+    echo "Missing index file name."
+    echo -e $USAGE
+    exit -1
+else
+    INDEX_FILE_PATH=$1
+fi
+
+# If we are running in cygwin, we have to convert the 
+# path to the Pig script into a Windows path:
+
+export SCRIPT_DIR=`dirname $0`
+if [[ `uname` == *CYGWIN* ]]
+then 
+  export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
+fi
+
+# Check whether the word distances target file already exists.
+# If so, Pig would run for a long time, and then die. Make
+# this more fail-fast:
+
+DEST_FILE=${DEST_DIR}/${INDEX_FILE_PATH}_partsOfSpeech.pos
+EXISTENCE=`hadoop fs -stat $DEST_FILE 2> /dev/null` 
+if [ -n "$EXISTENCE" ]
+then
+    echo "File $DEST_FILE already exists. Quitting."
+    exit -1
+fi
+
+# pigrun -x $EXEC_MODE \
+#         URL_MAP_DEST=${DEST_DIR}/${ROOT_DEST_NAME}_urlMap.pos \
+#         DEST_FILE=$DEST_FILE \
+#         CRAWL_SOURCE=$CRAWL_SOURCE \
+# 		TAG_FILTER=$TAG_FILTER \
+# 		MAIN_POS=$MAIN_POS \
+# 		POS_TAGS=$POS_TAGS \
+#         ${SCRIPT_DIR}/tagPartsOfSpeech.pig
+
+exit 0
+
