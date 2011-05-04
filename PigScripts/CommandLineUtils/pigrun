@@ -28,7 +28,7 @@
 
 #echo "Parameters ($#): $@"
 
-PIG_USER_JAR_DIR=/home/paepcke/contrib
+PIG_USER_JAR_DIR=`dirname $0`/../../contrib
 
 if [ $# -lt 1 ]
 then
