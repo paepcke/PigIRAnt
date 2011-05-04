@@ -168,13 +168,21 @@ public class PartOfSpeechTag  extends EvalFunc<Tuple>  {
 	 */
 	private PartOfSpeechTag(String theHTMLTags, Boolean outputStandardPOSTags, String POSTagsToOutput) {
 
-		if (theHTMLTags != null) 
+		// It's tricky to pass non-strings from a Pig script
+		// into a UDF. Also, it's tricky to pass an empty string
+		// from a bash script into a Pig script. So we allow the 
+		// string 'null' to indicate an empty string: 
+		if ((theHTMLTags != null) && 
+			!theHTMLTags.trim().isEmpty() &&
+			!theHTMLTags.equalsIgnoreCase("null"))
 			HTMLTagsToInclude = theHTMLTags;
 		
-		if (outputStandardPOSTags) {
+		if (outputStandardPOSTags.equals("true")) {
 			partsOfSpeechToOutput = standardPartsOfSpeechToOutput;
 			filterPOSTags = true;
-		} else if ((POSTagsToOutput != null) && (!POSTagsToOutput.isEmpty())){
+		} else if ((POSTagsToOutput != null) && 
+					!POSTagsToOutput.trim().isEmpty() &&
+					!POSTagsToOutput.equalsIgnoreCase("null")) {
 			partsOfSpeechToOutput = new HashMap<String,String>();				
 			for (String posTag : POSTagsToOutput.split(" ")) {
 				partsOfSpeechToOutput.put(posTag, posTag);
