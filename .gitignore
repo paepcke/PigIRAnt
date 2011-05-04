@@ -1,7 +1,6 @@
 .settings
 .classpath
 Datasets
-contrib
 bin
 build/
 Logs
@@ -15,4 +14,4 @@ PigScripts/orderError.pig~
 PigScripts/orderErrorLocal.pig
 PigScripts/orderErrorLocal.pig~
 ilc0
-lib
+

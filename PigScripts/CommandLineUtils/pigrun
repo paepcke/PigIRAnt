@@ -28,7 +28,10 @@
 
 #echo "Parameters ($#): $@"
 
-PIG_USER_JAR_DIR=`dirname $0`/../../contrib
+# We assume that PigIR.jar is in <root>/lib, and
+# that this script lives in <root>/PigScripts/CommandLineUtils.
+# Feel free to change:
+PIG_USER_JAR_DIR=`dirname $0`/../../lib
 
 if [ $# -lt 1 ]
 then
