@@ -117,41 +117,28 @@ public class PartOfSpeechTag  extends EvalFunc<Tuple>  {
 	*---------------*/
 	
 	/**
-	 * No special treatment of HTML, output all parts of speech tags
+	 * No special treatment of HTML, output only 
+	 * parts of speech defined in standardPartsOfSpeechToOutput:
 	 */
 	public PartOfSpeechTag() {
-		this(null, false, null);
+		this(null, "true", null);
 	}
 	
 	/**
-	 * Only tag content within the given HTML tags, output all parts of speech tags
+	 * Only tag content within the given HTML tags, 
+	 * output only the parts of speech tags given
+	 * in standardPartsOfSpeechToOutput:
 	 */
 	public PartOfSpeechTag(String theHTMLTags) {
-		this(theHTMLTags, false, null);
+		this(theHTMLTags, "true", null);
 	}
 	
 	/**
-	 * Only tag content within the given HTML tags, output the 'standard' 
-	 * parts of speech tags as defined in standardPartsOfSpeechToOutput: 
-	 */
-	public PartOfSpeechTag(String theHTMLTags, boolean outputStandardPOSTags) {
-		this(theHTMLTags, outputStandardPOSTags, null);
-	}
-	
-	/**
-	 * Only tag content within the given HTML tags, output the 'standard' 
-	 * parts of speech tags as defined in standardPartsOfSpeechToOutput: 
+	 * Only tag content within the given HTML tags, output the 
+	 * parts of speech tags given in POSTasToOutput:
 	 */
 	public PartOfSpeechTag(String theHTMLTags, String POSTagsToOutput) {
-		this(theHTMLTags, false, POSTagsToOutput);
-	}
-	
-	/**
-	 * No special treatment of HTML tags, output the 'standard' 
-	 * parts of speech tags as defined in standardPartsOfSpeechToOutput: 
-	 */
-	public PartOfSpeechTag(boolean outputStandardPOSTags) {
-		this(null, true, null);
+		this(theHTMLTags, "false", POSTagsToOutput);
 	}
 	
 	/**
@@ -166,7 +153,7 @@ public class PartOfSpeechTag  extends EvalFunc<Tuple>  {
 	 * 		of parts of speech tags. Only words tagged with tags in this parameter will be
 	 * 		included in the output.
 	 */
-	private PartOfSpeechTag(String theHTMLTags, Boolean outputStandardPOSTags, String POSTagsToOutput) {
+	public PartOfSpeechTag(String theHTMLTags, String outputStandardPOSTags, String POSTagsToOutput) {
 
 		// It's tricky to pass non-strings from a Pig script
 		// into a UDF. Also, it's tricky to pass an empty string
