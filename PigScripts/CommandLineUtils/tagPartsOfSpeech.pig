@@ -1,6 +1,6 @@
 
 -- STORE command for the parts of speech file:
-%declare POS_STORE_COMMAND "STORE partsOfSpeech INTO '$DEST_FILE' USING PIGStorage(",");";
+%declare POS_STORE_COMMAND "STORE partsOfSpeech INTO '$DEST_FILE' USING PIGStorage(',');";
 
 REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
 REGISTER $USER_CONTRIB/PigIR.jar;
