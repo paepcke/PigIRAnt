@@ -260,10 +260,12 @@ public class PartOfSpeechTag  extends EvalFunc<Tuple>  {
 			output.append(wordAndTagTuple);
 		}
 		// Last tag sometimes has a trailing newline. Take that out:
-		Tuple lastTuple = (Tuple) output.get(output.size() - 1);
-		lastTuple.set(1, ((String)(lastTuple.get(1))).trim());
-		// The above might all be by reference, but why risk it?
-		output.set(output.size() - 1, lastTuple);
+		if (output.size() > 0) {
+			Tuple lastTuple = (Tuple) output.get(output.size() - 1);
+			lastTuple.set(1, ((String)(lastTuple.get(1))).trim());
+			// The above might all be by reference, but why risk it?
+			output.set(output.size() - 1, lastTuple);
+		}
 		return output;
 	}
 	
