@@ -4,7 +4,8 @@
 
 REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
 REGISTER $USER_CONTRIB/PigIR.jar;
-REGISTER $USER_CONTRIB/jsoup-1.5.2.jar
+REGISTER $USER_CONTRIB/jsoup-1.5.2.jar;
+REGISTER $USER_CONTRIB/stanford-postagger-2011-04-20_with_model.jar;
 
 
 define partOfSpeechTag pigir.pigudf.PartOfSpeechTag('$TAG_FILTER','$MAIN_POS','$POS_TAGS'); 
@@ -19,8 +20,8 @@ docs = LOAD '$CRAWL_SOURCE'
 	 	httpHeader,
 	 	content:chararray);
 
-partsOfSpeech = FOREACH docs GENERATE FLATTEN(pigir.pigudf.PartOfSpeechTag(content));");
+partsOfSpeech = FOREACH docs GENERATE FLATTEN(partOfSpeechTag(content));
 
 DUMP partsOfSpeech;
---$TEXT_FRAGMENT_STORE_COMMAND;
+--$POS_STORE_COMMAND;
 

@@ -1,4 +1,3 @@
-WibbiCrawlName,mimeType,crawlType,year,month,day,machine,port,numPages,siteListName,sizeinGB,daemonLogFileName,crawlFilesDirectory
 01-2001,text,monthly,2001,01,00,WB9,8003,119790000,2001-01.tx,334,2001.log,2001-01
 03-2002,text,monthly,2002,03,00,WB2,7902,44480000,2002MarchCrawl.tx,152,ddaemon.log.2002,2002MarchCrawl
 06-2003,text,monthly,2003,06,00,WB1,7006,96060000,2003-06.tx,406,ddaemon.log.062003,2003-06

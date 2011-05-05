@@ -112,7 +112,7 @@ echo "crawl: '$1'"
 
 if [ $# == 0 ] 
 then
-    echo "Missing index file name."
+    echo "Missing crawl source name."
     echo -e $USAGE
     exit -1
 else
@@ -128,11 +128,39 @@ then
   export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
 fi
 
-# Check whether the word distances target file already exists.
+# Construct a path name root for the index.
+# Like this: <destDir>/<crawlName>_numPages_startSite_endSite,
+# where defaults are made to be: allPages, firstSite, lastSite
+
+if [ -z $NUM_PAGES ]
+then
+    TMP_NUM_PAGES=allPages
+else
+    TMP_NUM_PAGES=$NUM_PAGES
+fi
+
+if [ -z $START_SITE ]
+then
+    TMP_START_SITE=firstSite
+else
+    TMP_START_SITE=$START_SITE
+fi
+    
+if [ -z $END_SITE ]
+then
+    TMP_END_SITE=lastSite
+else
+    TMP_END_SITE=$END_SITE
+fi
+    
+ROOT_DEST_NAME=${DEST_DIR}/${CRAWL_NAME}_${TMP_NUM_PAGES}_${TMP_START_SITE}_${TMP_END_SITE}
+
+
+# Check whether the POS target file already exists.
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-DEST_FILE=${DEST_DIR}/${INDEX_FILE_PATH}_partsOfSpeech.pos
+DEST_FILE=${ROOT_DEST_NAME}_nlp.pos
 EXISTENCE=`hadoop fs -stat $DEST_FILE 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
@@ -140,22 +168,30 @@ then
     exit -1
 fi
 
+# The crawl source is expected in the form: crawlName:numPages:startSite:endSite,
+# though numPages, startSite, and endSite are all optional. Rather than 
+# doing lots of if statements, we just always include the three, even
+# if they are empty. If all three are empty that will be crawlName:::,
+# which is fine:
+
+CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
+
 echo pigrun -x $EXEC_MODE \
-        URL_MAP_DEST=${DEST_FILE}_urlMap.pos \
+        URL_MAP_DEST=${ROOT_DEST_NAME}_nlp_urlMap.pos \
         DEST_FILE=$DEST_FILE \
         CRAWL_SOURCE=$CRAWL_SOURCE \
         TAG_FILTER=$TAG_FILTER \
 	MAIN_POS=$MAIN_POS \
-	$POS_TAGS="" \
+	POS_TAGS=$POS_TAGS \
         ${SCRIPT_DIR}/tagPartsOfSpeech.pig
 
 pigrun -x $EXEC_MODE \
-        URL_MAP_DEST=${DEST_FILE}_urlMap.pos \
+        URL_MAP_DEST=${ROOT_DEST_NAME}_nlp_urlMap.pos \
         DEST_FILE=$DEST_FILE \
         CRAWL_SOURCE=$CRAWL_SOURCE \
         TAG_FILTER=$TAG_FILTER \
-		MAIN_POS=$MAIN_POS \
-		POS_TAGS=$POS_TAGS \
+	MAIN_POS=$MAIN_POS \
+	POS_TAGS=$POS_TAGS \
         ${SCRIPT_DIR}/tagPartsOfSpeech.pig
 
 # pigrun -x $EXEC_MODE \
