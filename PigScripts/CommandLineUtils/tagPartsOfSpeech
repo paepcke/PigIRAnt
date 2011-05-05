@@ -116,8 +116,12 @@ then
     echo -e $USAGE
     exit -1
 else
-    CRAWL_SOURCE=$1
+    CRAWL_NAME=$1
 fi
+
+#*******************
+echo "CRAWL_NAME: $CRAWL_NAME"
+#*******************
 
 # If we are running in cygwin, we have to convert the 
 # path to the Pig script into a Windows path:
