@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
+import org.apache.log4j.Logger;
 import org.apache.pig.EvalFunc;
 import org.apache.pig.FuncSpec;
 import org.apache.pig.data.DataType;
@@ -85,7 +85,8 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
  */
 public class PartOfSpeechTag  extends EvalFunc<Tuple>  {
 	
-	private String modelPath = "lib/partOfSpeechModels/left3words-wsj-0-18.tagger";
+	public final Logger logger = Logger.getLogger(getClass().getName());
+	private String modelPath = "jar:left3words-wsj-0-18.tagger";
 	private String HTMLTagsToInclude  = "";
 	private static MaxentTagger tagger = null;
 	private HashMap<String,String> partsOfSpeechToOutput = null;
@@ -182,17 +183,17 @@ public class PartOfSpeechTag  extends EvalFunc<Tuple>  {
 			try {
 				tagger = new MaxentTagger(modelPath);
 			} catch (ClassNotFoundException e) {
-				log.error("Part of speech tagger did not find model " + modelPath + ":" + e.getMessage());
+				logger.error("Part of speech tagger did not find model " + modelPath + ":" + e.getMessage());
 			} catch (IOException e) {
-				log.error("Part of speech tagger did not find model " + modelPath + ":" + e.getMessage());
+				logger.error("Part of speech tagger did not find model " + modelPath + ":" + e.getMessage());
+			} catch (Exception e) {
+				logger.error("Cannot instantiate part of speech tagger: " + e.getMessage());
 			}
 		}
-		
 	}
 	
 	public Tuple exec(Tuple input) throws IOException {
 		
-		Log log = getLogger();
     	String html = null;
     	TupleFactory mTupleFactory = TupleFactory.getInstance();
     	Tuple output = mTupleFactory.newTuple();
@@ -259,10 +260,12 @@ public class PartOfSpeechTag  extends EvalFunc<Tuple>  {
 			output.append(wordAndTagTuple);
 		}
 		// Last tag sometimes has a trailing newline. Take that out:
-		Tuple lastTuple = (Tuple) output.get(output.size() - 1);
-		lastTuple.set(1, ((String)(lastTuple.get(1))).trim());
-		// The above might all be by reference, but why risk it?
-		output.set(output.size() - 1, lastTuple);
+		if (output.size() > 0) {
+			Tuple lastTuple = (Tuple) output.get(output.size() - 1);
+			lastTuple.set(1, ((String)(lastTuple.get(1))).trim());
+			// The above might all be by reference, but why risk it?
+			output.set(output.size() - 1, lastTuple);
+		}
 		return output;
 	}
 	

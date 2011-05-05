@@ -269,7 +269,7 @@ public class DistributorContact implements Writable, Serializable {
 					numPages = Integer.parseInt(numPagesStr);
 				} catch (NumberFormatException e) {
 					String errMsg = "Badly formatted number-of-pages spec found in crawl list directory:" +
-					"\n'" + numPagesStr +
+					"'" + numPagesStr +
 					"'. In entry '" +
 					line +  "'.";
 					logger.error(errMsg);
