@@ -22,6 +22,6 @@ docs = LOAD '$CRAWL_SOURCE'
 
 partsOfSpeech = FOREACH docs GENERATE FLATTEN(partOfSpeechTag(content));
 
-DUMP partsOfSpeech;
---$POS_STORE_COMMAND;
+--DUMP partsOfSpeech;
+$POS_STORE_COMMAND;
 
