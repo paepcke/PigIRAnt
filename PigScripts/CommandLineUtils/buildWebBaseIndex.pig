@@ -132,10 +132,11 @@ oneColumnPostings = FOREACH oneColumnNestedPostings GENERATE flatten($0);
 -- it back in. Everything I tried for making it work without this 
 -- intermediate step failed with "Cannot cast String to DataTuple"...
 
-$TMP_INDEX_STORE_COMMAND
+--*******$TMP_INDEX_STORE_COMMAND
 
-theIndex = $TMP_INDEX_LOAD_COMMAND
+--*******theIndex = $TMP_INDEX_LOAD_COMMAND
 
-sortedIndex = ORDER theIndex BY token PARALLEL 5;
+--********sortedIndex = ORDER theIndex BY token PARALLEL 5;
+sortedIndex = ORDER oneColumnPostings BY token PARALLEL 5;
 
 $INDEX_STORE_COMMAND
